@@ -4,23 +4,23 @@ pipeline {
     options {
         skipDefaultCheckout true
     }
-
-    triggers {
-        pollSCM 'H/5 * * * *' // Poll SCM every 5 minutes
-    }
-
     stages {
         stage('Checkout') {
             when {
                 not {
                     expression {
-                        return env.CHANGE_MESSAGE.matches('.*\\[ci skip\\].*')
+                        def changeSets = currentBuild.changeSets
+                        if (changeSets && changeSets.size() > 0) {
+                            def commitMessages = changeSets.collectMany { it.items.collect { it.msg } }
+                            return commitMessages.any { it.matches('.*\\[ci skip\\].*') }
+                        }
+                        return false
                     }
                 }
             }
             steps {
                 // Checkout code from a Git repository
-                git url: 'https://github.com/AvinashNagula/testskipci.git',
+                git url: 'https://github.com/your-repo/your-project.git',
                     branch: 'main'
             }
         }
