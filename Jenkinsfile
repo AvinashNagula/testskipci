@@ -20,7 +20,7 @@ pipeline {
             }
             steps {
                 // Checkout code from a Git repository
-                git url: 'https://github.com/your-repo/your-project.git',
+                git url: 'https://github.com/AvinashNagula/testskipci.git',
                     branch: 'main'
             }
         }
