@@ -300,3 +300,43 @@ class SCMSkipMatcher {
         this.pattern = Pattern.compile(regex, Pattern.DOTALL)
     }
 }
+
+def shouldSkipBuild(Run<?, ?> run, SCMSkipMatcher matcher, TaskListener listener) {
+    def changeSets = run instanceof RunWithSCM ? ((RunWithSCM<?, ?>) run).getChangeSets() : []
+    if (changeSets.isEmpty()) {
+        listener.getLogger().println("SCM Skip: Changelog is empty!")
+        return false
+    }
+
+    def changeLogSet = changeSets.last()
+    if (changeLogSet.isEmptySet()) {
+        listener.getLogger().println("SCM Skip: Changelog is empty!")
+        return false
+    }
+
+    def allSkipped = true
+    def notMatched = ""
+
+    for (ChangeLogSet.Entry entry : changeLogSet) {
+        def fullMessage = getFullMessage(entry)
+        if (!matcher.match(fullMessage)) {
+            allSkipped = false
+            notMatched = fullMessage
+            break
+        }
+    }
+
+    def commitMessage = combineChangeLogMessages(changeLogSet)
+    def logMessage = allSkipped ?
+        "SCM Skip: Pattern matched on message: ${commitMessage}" :
+        "SCM Skip: Pattern NOT matched on message: ${notMatched}"
+
+    listener.getLogger().println(logMessage)
+
+    return allSkipped
+}
+
+private static String getFullMessage(ChangeLogSet.Entry entry) {
+    // Use the message directly from the changelog entry
+    return entry.getMsg()
+}
