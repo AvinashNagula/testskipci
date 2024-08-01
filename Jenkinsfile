@@ -16,6 +16,12 @@ pipeline {
                     branch: 'main'
             }
         }
+         stage('Build') {
+            steps {
+                // Add your build steps here
+                echo 'Building...'
+            }
+        }
     }
 }
 // Define the function to check commit messages
