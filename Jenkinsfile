@@ -61,20 +61,6 @@ pipeline {
         }
     }
 
-    post {
-        always {
-            echo 'Cleaning up...'
-            // Add any cleanup steps here
-        }
-
-        success {
-            echo 'Build succeeded!'
-        }
-
-        failure {
-            echo 'Build failed!'
-        }
-    }
 }
 
 // Define the function to get the latest commit message
