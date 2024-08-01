@@ -23,10 +23,24 @@ def shouldSkipBuild(String skipToken = '[ci skip]') {
     def changeSets = currentBuild.changeSets
     def shouldSkip = false
 
+    if (changeSets == null) {
+        echo "No change sets found."
+        return false
+    }
+
     changeSets.each { changeSet ->
+        if (changeSet.items == null) {
+            echo "Change set items are null."
+            return false
+        }
+
         changeSet.items.each { entry ->
             def message = entry.msg
-            if (message != null && message.contains(skipToken)) {
+            if (message == null) {
+                echo "Commit message is null."
+                return false
+            }
+            if (message.contains(skipToken)) {
                 echo "Skipping build due to commit message: ${message}"
                 shouldSkip = true
             }
