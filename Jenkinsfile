@@ -85,7 +85,7 @@ def getLatestCommitMessage() {
 
     def latestChangeSet = changeSets[-1] // Get the latest change set
     if (latestChangeSet.items == null || latestChangeSet.items.length == 0) {
-        echo "Change set items are null or empty."
+        echo "Change set items are null or empty./"
         return null
     }
 
