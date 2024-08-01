@@ -67,6 +67,8 @@ import jenkins.model.Jenkins
 import jenkins.scm.RunWithSCM
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
+import org.jenkinsci.plugins.git.GitMessageExtractor // Adjust the package as necessary
+
 
 class SCMSkipTools {
 
@@ -209,11 +211,10 @@ class SCMSkipTools {
     }
 
     private static String getFullMessage(ChangeLogSet.Entry entry) {
-        if (Jenkins.get().getPlugin("git") != null) {
-            return GitMessageExtractor.getFullMessage(entry)
-        }
+        // If you want to keep it simple without external dependencies:
         return entry.getMsg()
     }
+
 }
 
 
