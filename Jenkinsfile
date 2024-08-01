@@ -14,6 +14,7 @@ pipeline {
         }
         stage('test') {
             steps {
+                scmSkip(deleteBuild: true, skipPattern:'.*\\[ci skip\\].*')
                 echo "hello...."
             }
         }
