@@ -20,6 +20,9 @@ pipeline {
                     if (latestCommitMessage != null && latestCommitMessage ==~ skipPattern) {
                         env.SKIP_BUILD = 'true'
                         currentBuild.result = 'NOT_BUILT' // Mark the build as not built
+
+                        // Delete the current build
+                        deleteCurrentBuild()
                     } else {
                         env.SKIP_BUILD = 'false'
                     }
@@ -85,10 +88,25 @@ def getLatestCommitMessage() {
 
     def latestChangeSet = changeSets[-1] // Get the latest change set
     if (latestChangeSet.items == null || latestChangeSet.items.length == 0) {
-        echo "Change set items are null or empty./"
+        echo "Change set items are null or empty."
         return null
     }
 
     def latestCommit = latestChangeSet.items[-1] // Get the latest commit
     return latestCommit.msg
+}
+
+// Define the function to delete the current build
+def deleteCurrentBuild() {
+    script {
+        def jobName = env.JOB_NAME
+        def buildNumber = env.BUILD_NUMBER
+
+        // Construct the API URL for deleting the build
+        def apiUrl = "${JENKINS_URL}/job/${jobName}/${buildNumber}/"
+
+        // Use curl to send a DELETE request to the Jenkins API
+        sh "curl -X DELETE -u ${JENKINS_USER}:${JENKINS_API_TOKEN} '${apiUrl}'"
+        echo "Build ${buildNumber} deleted due to [skip ci] in commit message."
+    }
 }
