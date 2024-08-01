@@ -39,12 +39,12 @@ pipeline {
         }
 
         stage('Deploy') {
-            when {
-                not {
-                    // Skip the deploy stage if scmSkip has marked the build for skipping
-                    environment name: 'SKIP_BUILD', value: 'true'
-                }
-            }
+            // when {
+            //     not {
+            //         // Skip the deploy stage if scmSkip has marked the build for skipping
+            //         environment name: 'SKIP_BUILD', value: 'true'
+            //     }
+            // }
             steps {
                 echo 'Deploying...'
                 // Add your deployment steps here
