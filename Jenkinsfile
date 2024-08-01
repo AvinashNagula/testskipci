@@ -1,21 +1,45 @@
 pipeline {
     agent any
-    
+
+    options {
+        skipDefaultCheckout true
+    }
+
+    triggers {
+        pollSCM 'H/5 * * * *' // Poll SCM every 5 minutes
+    }
+
     stages {
-        stage('Build') {
+        stage('Checkout') {
+            when {
+                not {
+                    expression {
+                        return env.CHANGE_MESSAGE.matches('.*\\[ci skip\\].*')
+                    }
+                }
+            }
             steps {
-                scmSkip(deleteBuild: true, skipPattern:'.*\\[ci skip\\].*')
-            // Run build steps only when changes are detected in the domains folder or a new branch is pushed
-            git url: 'https://github.com/AvinashNagula/testskipci.git',
+                // Checkout code from a Git repository
+                git url: 'https://github.com/AvinashNagula/testskipci.git',
                     branch: 'main'
-            // Add your build steps here, /e.g.:
-            // sh 'mvn clean packa.ge'
             }
         }
-        stage('test') {
+        stage('Build') {
             steps {
-                scmSkip(deleteBuild: true, skipPattern:'.*\\[ci skip\\].*')
-                echo "hello...."
+                // Add your build steps here
+                echo 'Building...'
+            }
+        }
+        stage('Test') {
+            steps {
+                // Add your test steps here
+                echo 'Testing...'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                // Add your deployment steps here
+                echo 'Deploying...'
             }
         }
     }
