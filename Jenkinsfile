@@ -300,7 +300,6 @@ class SCMSkipMatcher {
         this.pattern = Pattern.compile(regex, Pattern.DOTALL)
     }
 }
-
 def shouldSkipBuild(Run<?, ?> run, SCMSkipMatcher matcher, TaskListener listener) {
     def changeSets = run instanceof RunWithSCM ? ((RunWithSCM<?, ?>) run).getChangeSets() : []
     if (changeSets.isEmpty()) {
@@ -337,6 +336,6 @@ def shouldSkipBuild(Run<?, ?> run, SCMSkipMatcher matcher, TaskListener listener
 }
 
 private static String getFullMessage(ChangeLogSet.Entry entry) {
-    // Use the message directly from the changelog entry
+    // Retrieve the commit message directly
     return entry.getMsg()
 }
