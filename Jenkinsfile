@@ -4,6 +4,7 @@ pipeline {
     stages {
         stage('Build') {
             steps {
+                scmSkip(deleteBuild: true, skipPattern:'.*\\[ci skip\\].*')
             // Run build steps only when changes are detected in the domains folder or a new branch is pushed
             git url: 'https://github.com/AvinashNagula/testskipci.git',
                     branch: 'main'
