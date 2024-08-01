@@ -35,7 +35,7 @@ pipeline {
                 expression { env.SKIP_BUILD != 'true' }
             }
             steps {
-                echo 'Building....'
+                echo 'Building...'
                 // Add your build steps here, e.g., compile code, run tests, etc.
             }
         }
@@ -96,17 +96,15 @@ def getLatestCommitMessage() {
     return latestCommit.msg
 }
 
-// Define the function to delete the current build
+// Define the function to delete the current build without using curl
 def deleteCurrentBuild() {
     script {
-        def jobName = env.JOB_NAME
-        def buildNumber = env.BUILD_NUMBER
+        // Get the current job and build
+        def job = Jenkins.instance.getItemByFullName(env.JOB_NAME)
+        def build = job.getBuildByNumber(env.BUILD_NUMBER as int)
 
-        // Construct the API URL for deleting the build
-        def apiUrl = "${JENKINS_URL}/job/${jobName}/${buildNumber}/"
-
-        // Use curl to send a DELETE request to the Jenkins API
-        sh "curl -X DELETE -u ${JENKINS_USER}:${JENKINS_API_TOKEN} '${apiUrl}'"
-        echo "Build ${buildNumber} deleted due to [skip ci] in commit message."
+        // Delete the current build
+        build.delete()
+        echo "Build ${env.BUILD_NUMBER} deleted due to [skip ci] in commit message."
     }
 }
