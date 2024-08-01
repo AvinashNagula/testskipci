@@ -4,14 +4,14 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // Checkout code from SCM
-                git url: 'https://github.com/AvinashNagula/testskipci.git',
-                    branch: 'main'
+                // Checkout code from the specified Git repository and branch
+                git url: 'https://github.com/AvinashNagula/testskipci.git', branch: 'main'
 
                 script {
-                    // Skip build if commit message contains 'ci skip' or 'skip ci' in any form
+                    // Skip build if the latest commit message contains 'ci skip' or 'skip ci' in any form
                     def skipPattern = '.*ci skip.*|.*skip ci.*'
-                    if (shouldSkipBuild(skipPattern)) {
+                    def latestCommitMessage = getLatestCommitMessage()
+                    if (latestCommitMessage != null && latestCommitMessage ==~ skipPattern) {
                         env.SKIP_BUILD = 'true'
                     } else {
                         env.SKIP_BUILD = 'false'
@@ -28,7 +28,7 @@ pipeline {
                 }
             }
             steps {
-                echo 'Building....'
+                echo 'Building...'
                 // Add your build steps here, e.g., compile code, run tests, etc.
             }
         }
@@ -76,40 +76,29 @@ pipeline {
     }
 }
 
-// Define the function to check commit messages
-def shouldSkipBuild(String skipPattern) {
+// Define the function to get the latest commit message
+def getLatestCommitMessage() {
     def changeSets = currentBuild.changeSets
-    def shouldSkip = false
 
-    if (changeSets == null) {
+    if (changeSets == null || changeSets.isEmpty()) {
         echo "No change sets found."
-        return false
+        return null
     }
 
-    changeSets.each { changeSet ->
-        if (changeSet.items == null) {
-            echo "Change set items are null."
-            return false
-        }
-
-        changeSet.items.each { entry ->
-            def message = entry.msg
-            if (message == null) {
-                echo "Commit message is null."
-                return false
-            }
-            if (message ==~ skipPattern) {
-                echo "Skipping build due to commit message: ${message}"
-                shouldSkip = true
-            }
-        }
+    def latestChangeSet = changeSets[-1] // Get the latest change set
+    if (latestChangeSet.items == null || latestChangeSet.items.isEmpty()) {
+        echo "Change set items are null or empty."
+        return null
     }
 
-    return shouldSkip
+    def latestCommit = latestChangeSet.items[-1] // Get the latest commit
+    return latestCommit.msg
 }
 
-// Call the function at the end of the Jenkinsfile to check for skip pattern
-if (shouldSkipBuild('.*ci skip.*|.*skip ci.*')) {
+// Call the function at the end of the Jenkinsfile to check for skip pattern in the latest commit message
+def skipPattern = '.*ci skip.*|.*skip ci.*'
+def latestCommitMessage = getLatestCommitMessage()
+if (latestCommitMessage != null && latestCommitMessage ==~ skipPattern) {
     currentBuild.result = 'NOT_BUILT'
-    error("Build skipped due to presence of skip token in commit message")
+    error("Build skipped due to presence of skip token in the latest commit message")
 }
