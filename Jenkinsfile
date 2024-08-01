@@ -2,17 +2,19 @@ pipeline {
     agent any
 
     stages {
-        when {
-            not {
-                expression {
-                    return env.CHANGE_MESSAGE.matches('.*\\[ci skip\\].*')
+        stage('Checkout') {
+            when {
+                not {
+                    expression {
+                        return env.CHANGE_MESSAGE.matches('.*\\[ci skip\\].*')
+                    }
                 }
             }
-        }
-        steps {
-            // Checkout code from a Git repository
-            git url: 'https://github.com/AvinashNagula/testskipci.git',
-                branch: 'main'
+            steps {
+                // Checkout code from a Git repository
+                git url: 'https://github.com/AvinashNagula/testskipci.git',
+                    branch: 'main'
+            }
         }
     }
 }
