@@ -1,46 +1,51 @@
 pipeline {
     agent any
 
-    options {
-        skipDefaultCheckout true
-    }
     stages {
         stage('Checkout') {
-            when {
-                not {
-                    expression {
-                        def changeSets = currentBuild.changeSets
-                        if (changeSets && changeSets.size() > 0) {
-                            def commitMessages = changeSets.collectMany { it.items.collect { it.msg } }
-                            return commitMessages.any { it.matches('.*\\[ci skip\\].*') }
-                        }
-                        return false
-                    }
-                }
-            }
             steps {
-                // Checkout code from a Git repository
-                git url: 'https://github.com/your-repo/your-project.git',
-                    branch: 'main'
+                // Checkout code from SCM
+                checkout scm
+
+                // Skip build if commit message contains [ci skip] or [skip ci]
+                scmSkip(deleteBuild: true, skipPattern: '.*\\[ci skip\\].*|.*\\[skip ci\\].*')
             }
         }
+
         stage('Build') {
             steps {
-                // Add your build steps here
                 echo 'Building...'
+                // Add your build steps here, e.g., compile code, run tests, etc.
             }
         }
+
         stage('Test') {
             steps {
-                // Add your test steps here
                 echo 'Testing...'
+                // Add your test steps here
             }
         }
+
         stage('Deploy') {
             steps {
-                // Add your deployment steps here
                 echo 'Deploying...'
+                // Add your deployment steps here
             }
+        }
+    }
+
+    post {
+        always {
+            echo 'Cleaning up...'
+            // Add any cleanup steps here
+        }
+
+        success {
+            echo 'Build succeeded!'
+        }
+
+        failure {
+            echo 'Build failed!'
         }
     }
 }
