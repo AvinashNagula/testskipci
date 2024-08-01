@@ -45,9 +45,6 @@ pipeline {
         }
     }
 }
-
-package net.plavcak.jenkins.plugins.scmskip
-
 import hudson.AbortException
 import hudson.model.AbstractBuild
 import hudson.model.AbstractProject
