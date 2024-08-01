@@ -45,6 +45,9 @@ pipeline {
         }
     }
 }
+import net.plavcak.jenkins.plugins.scmskip.SCMSkipDeleteEnvironmentAction
+import net.plavcak.jenkins.plugins.scmskip.SCMSkipMatcher
+
 import hudson.AbortException
 import hudson.model.AbstractBuild
 import hudson.model.AbstractProject
@@ -210,5 +213,89 @@ class SCMSkipTools {
             return GitMessageExtractor.getFullMessage(entry)
         }
         return entry.getMsg()
+    }
+}
+
+
+import edu.umd.cs.findbugs.annotations.CheckForNull
+import edu.umd.cs.findbugs.annotations.NonNull
+import hudson.EnvVars
+import hudson.model.EnvironmentContributingAction
+import hudson.model.Run
+import java.util.regex.Matcher
+import java.util.regex.Pattern
+import org.apache.commons.lang.StringUtils
+
+class SCMSkipDeleteEnvironmentAction implements EnvironmentContributingAction {
+
+    private transient boolean deleteBuild
+
+    SCMSkipDeleteEnvironmentAction() {}
+
+    SCMSkipDeleteEnvironmentAction(boolean deleteBuild) {
+        this.deleteBuild = deleteBuild
+    }
+
+    boolean isDeleteBuild() {
+        return deleteBuild
+    }
+
+    void setDeleteBuild(boolean deleteBuild) {
+        this.deleteBuild = deleteBuild
+    }
+
+    @CheckForNull
+    @Override
+    String getIconFileName() {
+        return null
+    }
+
+    @CheckForNull
+    @Override
+    String getDisplayName() {
+        return "Delete Build After Completed"
+    }
+
+    @CheckForNull
+    @Override
+    String getUrlName() {
+        return null
+    }
+
+    @Override
+    void buildEnvironment(@NonNull Run<?, ?> run, @NonNull EnvVars env) {
+        env.put(SCMSkipConstants.DELETE_BUILD, String.valueOf(deleteBuild))
+    }
+}
+
+class SCMSkipMatcher {
+
+    private Pattern pattern
+
+    SCMSkipMatcher(String pattern) {
+        setPattern(pattern)
+    }
+
+    SCMSkipMatcher() {
+        setPattern(null)
+    }
+
+    boolean match(String message) {
+        if (StringUtils.isEmpty(message)) {
+            return false
+        }
+        final Matcher matcher = pattern.matcher(message)
+        return matcher.matches()
+    }
+
+    Pattern getPattern() {
+        return pattern
+    }
+
+    void setPattern(String regex) {
+        if (StringUtils.isEmpty(regex)) {
+            regex = SCMSkipConstants.DEFAULT_PATTERN
+        }
+        this.pattern = Pattern.compile(regex, Pattern.DOTALL)
     }
 }
