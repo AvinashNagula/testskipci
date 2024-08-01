@@ -9,7 +9,7 @@ pipeline {
             git url: 'https://github.com/AvinashNagula/testskipci.git',
                     branch: 'main'
             // Add your build steps here, /e.g.:
-            // sh 'mvn clean package'
+            // sh 'mvn clean packa.ge'
             }
         }
         stage('test') {
