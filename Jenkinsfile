@@ -46,7 +46,7 @@ pipeline {
             //     }
             // }
             steps {
-                echo 'Deploying...'
+                echo 'Deploying..'
                 // Add your deployment steps here
             }
         }
