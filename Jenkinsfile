@@ -18,7 +18,6 @@ pipeline {
         }
     }
 }
-
 // Define the function to check commit messages
 def shouldSkipBuild(String skipToken = '[ci skip]') {
     def changeSets = currentBuild.changeSets
@@ -27,7 +26,7 @@ def shouldSkipBuild(String skipToken = '[ci skip]') {
     changeSets.each { changeSet ->
         changeSet.items.each { entry ->
             def message = entry.msg
-            if (message.contains(skipToken)) {
+            if (message != null && message.contains(skipToken)) {
                 echo "Skipping build due to commit message: ${message}"
                 shouldSkip = true
             }
