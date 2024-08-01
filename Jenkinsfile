@@ -49,7 +49,14 @@ pipeline {
 // Function to check for skip CI pattern in commit messages
 def shouldSkipBuild(changelog) {
     def skipPattern = ~/.*\[ci skip\].*/ // Pattern to look for
-    def messages = changelog.get("git").get("branches").collect { it.get("commit")?.get("message") } // Extract commit messages
 
-    return messages.any { msg -> skipPattern.matcher(msg).matches() } // Check for matches
+    // Check if changelog is not null and contains entries
+    if (changelog && changelog.get("git") && changelog.get("git").get("branches")) {
+        def messages = changelog.get("git").get("branches").collect { branch ->
+            branch.get("commit")?.get("message") // Safely extract commit message
+        }.findAll { it } // Filter out null messages
+
+        return messages.any { msg -> skipPattern.matcher(msg).matches() } // Check for matches
+    }
+    return false // Return false if changelog is null or empty
 }
