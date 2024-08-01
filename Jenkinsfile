@@ -6,13 +6,20 @@ pipeline {
             steps {
                 // Checkout code from the specified Git repository and branch
                 git url: 'https://github.com/AvinashNagula/testskipci.git', branch: 'main'
+            }
+        }
 
+        stage('Check for Skip CI') {
+            steps {
                 script {
-                    // Skip build if the latest commit message contains 'ci skip' or 'skip ci' in any form
+                    // Define the skip pattern to look for in the commit message
                     def skipPattern = '.*ci skip.*|.*skip ci.*'
                     def latestCommitMessage = getLatestCommitMessage()
+
+                    // Check the latest commit message against the skip pattern
                     if (latestCommitMessage != null && latestCommitMessage ==~ skipPattern) {
                         env.SKIP_BUILD = 'true'
+                        currentBuild.result = 'NOT_BUILT' // Mark the build as not built
                     } else {
                         env.SKIP_BUILD = 'false'
                     }
@@ -22,10 +29,7 @@ pipeline {
 
         stage('Build') {
             when {
-                not {
-                    // Skip the build stage if scmSkip has marked the build for skipping
-                    environment name: 'SKIP_BUILD', value: 'true'
-                }
+                expression { env.SKIP_BUILD != 'true' }
             }
             steps {
                 echo 'Building...'
@@ -35,10 +39,7 @@ pipeline {
 
         stage('Test') {
             when {
-                not {
-                    // Skip the test stage if scmSkip has marked the build for skipping
-                    environment name: 'SKIP_BUILD', value: 'true'
-                }
+                expression { env.SKIP_BUILD != 'true' }
             }
             steps {
                 echo 'Testing...'
@@ -48,10 +49,7 @@ pipeline {
 
         stage('Deploy') {
             when {
-                not {
-                    // Skip the deploy stage if scmSkip has marked the build for skipping
-                    environment name: 'SKIP_BUILD', value: 'true'
-                }
+                expression { env.SKIP_BUILD != 'true' }
             }
             steps {
                 echo 'Deploying...'
@@ -93,12 +91,4 @@ def getLatestCommitMessage() {
 
     def latestCommit = latestChangeSet.items[-1] // Get the latest commit
     return latestCommit.msg
-}
-
-// Call the function at the end of the Jenkinsfile to check for skip pattern in the latest commit message
-def skipPattern = '.*ci skip.*|.*skip ci.*'
-def latestCommitMessage = getLatestCommitMessage()
-if (latestCommitMessage != null && latestCommitMessage ==~ skipPattern) {
-    currentBuild.result = 'NOT_BUILT'
-    error("Build skipped due to presence of skip token in the latest commit message")
 }
