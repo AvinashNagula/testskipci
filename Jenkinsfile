@@ -56,7 +56,21 @@ def shouldSkipBuild(changelog) {
             branch.get("commit")?.get("message") // Safely extract commit message
         }.findAll { it } // Filter out null messages
 
-        return messages.any { msg -> skipPattern.matcher(msg).matches() } // Check for matches
+        // Log the messages for debugging
+        echo "Commit Messages: ${messages}"
+
+        // Check if any commit message matches the pattern
+        def skipDetected = messages.any { msg -> 
+            echo "Checking message: ${msg}" // Log each message being checked
+            skipPattern.matcher(msg).matches() 
+        }
+
+        if (skipDetected) {
+            echo 'Skipping build due to "[ci skip]" in commit message'
+        }
+        return skipDetected // Return the result
     }
+    
+    echo 'No changelog found or no commit messages to check.'
     return false // Return false if changelog is null or empty
 }
