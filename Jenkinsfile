@@ -35,7 +35,7 @@ pipeline {
                 expression { env.SKIP_BUILD != 'true' }
             }
             steps {
-                echo 'Building...'
+                echo 'Building....'
                 // Add your build steps here, e.g., compile code, run tests, etc.
             }
         }
