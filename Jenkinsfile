@@ -58,20 +58,20 @@ pipeline {
         }
     }
 
-    // post {
-    //     always {
-    //         echo 'Cleaning up...'
-    //         // Add any cleanup steps here
-    //     }
+    post {
+        always {
+            echo 'Cleaning up...'
+            // Add any cleanup steps here
+        }
 
-    //     success {
-    //         echo 'Build succeeded!'
-    //     }
+        success {
+            echo 'Build succeeded!'
+        }
 
-    //     failure {
-    //         echo 'Build failed!'
-    //     }
-    // }
+        failure {
+            echo 'Build failed!'
+        }
+    }
 }
 
 // Define the function to get the latest commit message
@@ -84,7 +84,7 @@ def getLatestCommitMessage() {
     }
 
     def latestChangeSet = changeSets[-1] // Get the latest change set
-    if (latestChangeSet.items == null || latestChangeSet.items.isEmpty()) {
+    if (latestChangeSet.items == null || latestChangeSet.items.length == 0) {
         echo "Change set items are null or empty."
         return null
     }
