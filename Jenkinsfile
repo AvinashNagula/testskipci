@@ -2,68 +2,41 @@ pipeline {
     agent any
 
     stages {
-        stage('Checkout') {
-            steps {
-                // Checkout code from SCM
-                checkout scm
-
-                // Skip build if commit message contains 'ci skip' or 'skip ci' in any form
-                scmSkip(deleteBuild: true, skipPattern: '.*ci skip.*|.*skip ci.*')
-            }
-        }
-
-        stage('Build') {
-            when {
-                not {
-                    // Skip the build stage if scmSkip has marked the build for skipping
-                    environment name: 'SKIP_BUILD', value: 'true'
+        when {
+            not {
+                expression {
+                    return env.CHANGE_MESSAGE.matches('.*\\[ci skip\\].*')
                 }
             }
-            steps {
-                echo 'Building...'
-                // Add your build steps here, e.g., compile code, run tests, etc.
-            }
         }
-
-        stage('Test') {
-            when {
-                not {
-                    // Skip the test stage if scmSkip has marked the build for skipping
-                    environment name: 'SKIP_BUILD', value: 'true'
-                }
-            }
-            steps {
-                echo 'Testing...'
-                // Add your test steps here
-            }
+        steps {
+            // Checkout code from a Git repository
+            git url: 'https://github.com/AvinashNagula/testskipci.git',
+                branch: 'main'
         }
+    }
+}
 
-        stage('Deploy') {
-            // when {
-            //     not {
-            //         // Skip the deploy stage if scmSkip has marked the build for skipping
-            //         environment name: 'SKIP_BUILD', value: 'true'
-            //     }
-            // }
-            steps {
-                echo 'Deploying...'
-                // Add your deployment steps here
+// Define the function to check commit messages
+def shouldSkipBuild(String skipToken = '[ci skip]') {
+    def changeSets = currentBuild.changeSets
+    def shouldSkip = false
+
+    changeSets.each { changeSet ->
+        changeSet.items.each { entry ->
+            def message = entry.msg
+            if (message.contains(skipToken)) {
+                echo "Skipping build due to commit message: ${message}"
+                shouldSkip = true
             }
         }
     }
 
-    post {
-        always {
-            echo 'Cleaning up...'
-            // Add any cleanup steps here
-        }
+    return shouldSkip
+}
 
-        success {
-            echo 'Build succeeded..!'
-        }
-
-        failure {
-            echo 'Build failed!'
-        }
-    }
+// Call the function at the end of the Jenkinsfile
+if (shouldSkipBuild('[ci skip]')) {
+    currentBuild.result = 'NOT_BUILT'
+    error("Build skipped due to presence of skip token in commit message")
 }
