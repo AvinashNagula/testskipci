@@ -17,7 +17,13 @@ pipeline {
                 // Checkout code from a Git repository
                 git url: 'https://github.com/AvinashNagula/testskipci.git', branch: 'main'
                 // Call the scmSkipCI function after checkout
-                scmSkip(deleteBuild: true, skipPattern: '.*\\[ci skip\\].*')
+                script {
+                    if (currentBuild.rawBuild.getCause(hudson.model.Cause$SCMTrigger).getCommitMessage().contains('[ci skip]')) {
+                        echo 'Skipping build due to [ci skip] in commit message'
+                        currentBuild.result = 'SUCCESS'
+                        return
+                    }
+                }
 
             }
         }
