@@ -13,11 +13,9 @@ pipeline {
         stage('Checkout') {
             
             steps {
-                // scmSkip(deleteBuild: true, skipPattern:'.*\\[ci skip\\].*')
-                scmSkipCI(deleteBuild: true, skipPattern: '.*\\[ci skip\\].*')
                 // Checkout code from a Git repository
                 git url: 'https://github.com/AvinashNagula/testskipci.git', branch: 'main'
-                    
+                    scmSkipCI(deleteBuild: true, skipPattern: '.*ci skip.*')
 
             }
         }
@@ -29,7 +27,7 @@ pipeline {
             }
             steps {
                 // Add your build steps here
-                echo 'Building...'
+                echo 'Building....'
             }
         }
         stage('Test') {
@@ -45,16 +43,6 @@ pipeline {
         }
         
     }
-    //  post {
-    //     always {
-    //         script {
-    //             if (currentBuild.result == 'NOT_BUILT') {
-    //                 echo 'Deleting build marked as NOT_BUILT'
-    //                 currentBuild.rawBuild.delete()
-    //             }
-    //         }
-    //     }
-    // }
 }
 def scmSkipCI(Map params = [:]) {
     def deleteBuild = params.get('deleteBuild', false)
@@ -66,10 +54,6 @@ def scmSkipCI(Map params = [:]) {
         if (deleteBuild) {
             currentBuild.result = 'NOT_BUILT'
             throw new hudson.AbortException("Build skipped due to SCM skip pattern")
-            if (currentBuild.result == 'NOT_BUILT') {
-                echo 'Deleting build marked as NOT_BUILT'
-                currentBuild.rawBuild.delete()
-            }
         }
     } else {
         echo "Proceeding with the build"
