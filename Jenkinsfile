@@ -43,16 +43,16 @@ pipeline {
         }
         
     }
-     post {
-        always {
-            script {
-                if (currentBuild.result == 'NOT_BUILT') {
-                    echo 'Deleting build marked as NOT_BUILT'
-                    currentBuild.rawBuild.delete()
-                }
-            }
-        }
-    }
+    //  post {
+    //     always {
+    //         script {
+    //             if (currentBuild.result == 'NOT_BUILT') {
+    //                 echo 'Deleting build marked as NOT_BUILT'
+    //                 currentBuild.rawBuild.delete()
+    //             }
+    //         }
+    //     }
+    // }
 }
 def scmSkipCI(Map params = [:]) {
     def deleteBuild = params.get('deleteBuild', false)
