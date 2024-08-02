@@ -11,16 +11,22 @@ pipeline {
 
     stages {
         stage('Checkout') {
-            
             steps {
-                // Checkout code from a Git repository
-                git url: 'https://github.com/AvinashNagula/testskipci.git', branch: 'main'
-                    scmSkipCI(deleteBuild: true, skipPattern: '.*ci skip.*')
-
+                script {
+                    try {
+                        // Checkout code from a Git repository
+                        git url: 'https://github.com/AvinashNagula/testskipci.git', branch: 'main'
+                        scmSkipCI(deleteBuild: true, skipPattern: '.*ci skip.*')
+                    } catch (hudson.AbortException e) {
+                        // Handle build skipping
+                        echo 'Build skipping initiated'
+                        throw e
+                    }
+                }
             }
         }
         stage('Build') {
-             when {
+            when {
                 not {
                     equals expected: 'NOT_BUILT', actual: currentBuild.result
                 }
@@ -41,9 +47,20 @@ pipeline {
                 echo 'Testing...'
             }
         }
-        
+    }
+
+    post {
+        always {
+            script {
+                if (currentBuild.result == 'NOT_BUILT') {
+                    echo 'Deleting build marked as NOT_BUILT'
+                    currentBuild.rawBuild.delete()
+                }
+            }
+        }
     }
 }
+
 def scmSkipCI(Map params = [:]) {
     def deleteBuild = params.get('deleteBuild', false)
     def skipPattern = params.get('skipPattern', '.*\\[ci skip\\].*')
@@ -53,10 +70,10 @@ def scmSkipCI(Map params = [:]) {
         echo "Skipping build due to commit message matching pattern ${skipPattern}"
         if (deleteBuild) {
             currentBuild.result = 'NOT_BUILT'
-            throw new hudson.AbortException("Build skipped due to SCM skip pattern")
+            // throw new hudson.AbortException("Build skipped due to SCM skip pattern")
         }
     } else {
-        echo "Proceeding with the build"
+        echo "Proceeding with the build."
     }
 }
 
