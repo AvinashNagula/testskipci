@@ -71,39 +71,32 @@ def shouldSkipBuild(Run<?, ?> run, Pattern pattern, TaskListener listener) {
         return false
     }
 
-    def changeLogSet = changeSets.last()
-    if (changeLogSet.isEmptySet()) {
-        listener.getLogger().println("SCM Skip: Changelog is empty!")
-        LOGGER.fine("Changelog is empty!")
-        return false
-    }
-
     def allSkipped = true
     def notMatched = ""
 
-    for (ChangeLogSet.Entry entry : changeLogSet) {
-        def fullMessage = getFullMessage(entry)
-        if (!pattern.matcher(fullMessage).matches()) {
-            allSkipped = false
-            notMatched = fullMessage
+    for (ChangeLogSet<?> changeLogSet : changeSets) {
+        for (ChangeLogSet.Entry entry : changeLogSet) {
+            def fullMessage = getFullMessage(entry)
+            listener.getLogger().println("Processing commit message: ${fullMessage}")
+            if (!pattern.matcher(fullMessage).matches()) {
+                allSkipped = false
+                notMatched = fullMessage
+                break
+            }
+        }
+        if (!allSkipped) {
             break
         }
     }
 
-    def commitMessage = combineChangeLogMessages(changeLogSet)
     def logMessage = allSkipped ?
-        "SCM Skip: Pattern ${pattern.pattern()} matched on message: ${commitMessage}" :
+        "SCM Skip: Pattern ${pattern.pattern()} matched on message: ${notMatched}" :
         "SCM Skip: Pattern ${pattern.pattern()} NOT matched on message: ${notMatched}"
 
     listener.getLogger().println(logMessage)
     LOGGER.fine(logMessage)
 
     return allSkipped
-}
-
-// Helper function to combine change log messages
-def combineChangeLogMessages(ChangeLogSet<?> changeLogSet) {
-    return changeLogSet.collect { getFullMessage(it) }.join(" ")
 }
 
 // Helper function to get the full message from a change log entry
