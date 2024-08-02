@@ -11,66 +11,103 @@ pipeline {
 
     stages {
         stage('Checkout') {
-            steps {
-                script {
-                    // Checkout code from the specified Git repository
-                    def changelog = checkout([
-                        $class: 'GitSCM',
-                        branches: [[name: '*/main']], // Checkout the 'main' branch
-                        userRemoteConfigs: [[url: 'https://github.com/AvinashNagula/testskipci.git']] // Your Git URL
-                    ])
-
-                    // Check if any commit message contains "[ci skip]"
-                    if (shouldSkipBuild(changelog)) {
-                        currentBuild.result = 'ABORTED'
-                        error('Skipping build due to "[ci skip]" in commit message')
+            when {
+                not {
+                    expression {
+                        def pattern = ~/.*\[ci skip\].*/
+                        return scmSkip(currentBuild.rawBuild, pattern, currentBuild.rawBuild.getListener())
                     }
                 }
+            }
+            steps {
+                // Checkout code from a Git repository
+                git url: 'https://github.com/AvinashNagula/testskipci.git', branch: 'main'
+
             }
         }
         stage('Build') {
             steps {
+                // Add your build steps here
                 echo 'Building...'
             }
         }
         stage('Test') {
             steps {
+                // Add your test steps here
                 echo 'Testing...'
             }
         }
         stage('Deploy') {
             steps {
+                // Add your deployment steps here
                 echo 'Deploying...'
             }
         }
     }
 }
 
-// Function to check for skip CI pattern in commit messages
-def shouldSkipBuild(changelog) {
-    def skipPattern = ~/.*\[ci skip\].*/ // Pattern to look for
+import hudson.model.Run
+import hudson.model.TaskListener
+import hudson.scm.ChangeLogSet
+import jenkins.scm.RunWithSCM
+import java.util.logging.Logger
+import java.util.regex.Pattern
 
-    // Check if changelog is not null and contains entries
-    if (changelog && changelog.get("git") && changelog.get("git").get("branches")) {
-        def messages = changelog.get("git").get("branches").collect { branch ->
-            branch.get("commit")?.get("message") // Safely extract commit message
-        }.findAll { it } // Filter out null messages
+// Logger for debugging
+def LOGGER = Logger.getLogger(this.class.name)
 
-        // Log the messages for debugging
-        echo "Commit Messages: ${messages}"
+// Function to check if the build should be skipped based on commit messages
+def call(Run<?, ?> run, Pattern pattern, TaskListener listener) {
+    return shouldSkipBuild(run, pattern, listener)
+}
 
-        // Check if any commit message matches the pattern
-        def skipDetected = messages.any { msg -> 
-            echo "Checking message: ${msg}" // Log each message being checked
-            skipPattern.matcher(msg).matches() 
-        }
-
-        if (skipDetected) {
-            echo 'Skipping build due to "[ci skip]" in commit message'
-        }
-        return skipDetected // Return the result
+def shouldSkipBuild(Run<?, ?> run, Pattern pattern, TaskListener listener) {
+    def changeSets = run instanceof RunWithSCM ? ((RunWithSCM<?, ?>) run).getChangeSets() : []
+    if (changeSets.isEmpty()) {
+        listener.getLogger().println("SCM Skip: Changelog is empty!")
+        LOGGER.fine("Changelog is empty!")
+        return false
     }
-    
-    echo 'No changelog found or no commit messages to check.'
-    return false // Return false if changelog is null or empty
+
+    def changeLogSet = changeSets.last()
+    if (changeLogSet.isEmptySet()) {
+        listener.getLogger().println("SCM Skip: Changelog is empty!")
+        LOGGER.fine("Changelog is empty!")
+        return false
+    }
+
+    def allSkipped = true
+    def notMatched = ""
+
+    for (ChangeLogSet.Entry entry : changeLogSet) {
+        def fullMessage = getFullMessage(entry)
+        if (!pattern.matcher(fullMessage).matches()) {
+            allSkipped = false
+            notMatched = fullMessage
+            break
+        }
+    }
+
+    def commitMessage = combineChangeLogMessages(changeLogSet)
+    def logMessage = allSkipped ?
+        "SCM Skip: Pattern ${pattern.pattern()} matched on message: ${commitMessage}" :
+        "SCM Skip: Pattern ${pattern.pattern()} NOT matched on message: ${notMatched}"
+
+    listener.getLogger().println(logMessage)
+    LOGGER.fine(logMessage)
+
+    return allSkipped
+}
+
+// Helper function to combine change log messages
+def combineChangeLogMessages(ChangeLogSet<?> changeLogSet) {
+    return changeLogSet.collect { getFullMessage(it) }.join(" ")
+}
+
+// Helper function to get the full message from a change log entry
+def getFullMessage(ChangeLogSet.Entry entry) {
+    if (Jenkins.getInstance().getPlugin("git") != null) {
+        return GitMessageExtractor.getFullMessage(entry)
+    }
+    return entry.getMsg()
 }
