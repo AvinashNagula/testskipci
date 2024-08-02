@@ -13,14 +13,15 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
-                    try {
-                        // Checkout code from a Git repository
-                        git url: 'https://github.com/AvinashNagula/testskipci.git', branch: 'main'
-                        scmSkipCI(deleteBuild: false, skipPattern: '.*ci skip.*')
-                    } catch (hudson.AbortException e) {
-                        // Handle build skipping
-                        echo 'Build skipping initiated'
-                        throw e
+                
+                    // Checkout code from a Git repository
+                    git url: 'https://github.com/AvinashNagula/testskipci.git', branch: 'main'
+                    scmSkipCI(deleteBuild: false, skipPattern: '.*ci skip.*')
+                    def commitMessage = sh(script: 'git log -1 --pretty=%B', returnStdout: true).trim()
+                    if (commitMessage ==~ /.*\[ci skip\].*/) {
+                        echo "Skipping the entire pipeline due to commit message matching pattern."
+                        currentBuild.result = 'ABORTED' // Set the build result to ABORTED
+                        error("Aborting the pipeline due to 'ci skip' in the commit message.")
                     }
                 }
             }
@@ -49,14 +50,12 @@ pipeline {
         }
     }
 
-     post {
+    post {
         always {
             script {
-                def commitMessage = sh(script: 'git log -1 --pretty=%B', returnStdout: true).trim()
-                if (commitMessage ==~ /.*\[ci skip\].*/) {
-                    echo "Skipping the entire pipeline due to commit message matching pattern."
-                    currentBuild.result = 'ABORTED' // Set the build result to ABORTED
-                    deleteBuild() // Custom method to delete the build
+                if (currentBuild.result == 'ABORTED') {
+                    echo "Build was aborted due to 'ci skip' in the commit message."
+                    deleteBuild() // Call the delete build method
                 }
             }
         }
@@ -86,8 +85,6 @@ def getCommitMessage() {
 }
 
 def deleteBuild() {
-    if (currentBuild.result == 'ABORTED') {
-        echo "Deleting the build marked as ABORTED"
-        currentBuild.rawBuild.delete()
-    }
+    echo "Deleting the build marked as ABORTED."
+    currentBuild.rawBuild.delete()
 }
