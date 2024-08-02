@@ -44,11 +44,10 @@ pipeline {
         
     }
 }
-// vars/scmSkipCI.groovy
-def call(Map params = [:]) {
+def scmSkipCI(Map params = [:]) {
     def deleteBuild = params.get('deleteBuild', false)
     def skipPattern = params.get('skipPattern', '.*\\[ci skip\\].*')
-    
+
     def commitMessage = getCommitMessage()
     if (commitMessage ==~ /${skipPattern}/) {
         echo "Skipping build due to commit message matching pattern ${skipPattern}"
