@@ -61,3 +61,8 @@ def getCommitMessage() {
     def commitMessage = sh(script: 'git log -1 --pretty=%B', returnStdout: true).trim()
     return commitMessage
 }
+
+def deleteBuild() {
+    echo "Deleting the build marked as NOT_BUILT."
+    currentBuild.rawBuild.delete()
+}
