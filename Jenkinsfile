@@ -15,12 +15,12 @@ pipeline {
             steps {
                 // Checkout code from a Git repository
                 git url: 'https://github.com/AvinashNagula/testskipci.git', branch: 'main'
-                scmSkipCI(deleteBuild: true, skipPattern: '.*\\[ci skip\\].*')
+                    scmSkipCI(deleteBuild: true, skipPattern: '.*ci skip.*')
 
             }
         }
         stage('Build') {
-            when {
+             when {
                 not {
                     equals expected: 'NOT_BUILT', actual: currentBuild.result
                 }
