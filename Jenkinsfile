@@ -16,7 +16,7 @@ pipeline {
                     try {
                         // Checkout code from a Git repository
                         git url: 'https://github.com/AvinashNagula/testskipci.git', branch: 'main'
-                        scmSkipCI(deleteBuild: true, skipPattern: '.*ci skip.*')
+                        scmSkipCI(deleteBuild: false, skipPattern: '.*ci skip.*')
                     } catch (hudson.AbortException e) {
                         // Handle build skipping
                         echo 'Build skipping initiated'
@@ -52,10 +52,7 @@ pipeline {
     post {
         always {
             script {
-                if (currentBuild.result == 'NOT_BUILT') {
-                    echo 'Deleting build marked as NOT_BUILT'
-                    currentBuild.rawBuild.delete()
-                }
+                echo "Build skipped due to commit message matching skip pattern."
             }
         }
     }
@@ -70,10 +67,10 @@ def scmSkipCI(Map params = [:]) {
         echo "Skipping build due to commit message matching pattern ${skipPattern}"
         if (deleteBuild) {
             currentBuild.result = 'NOT_BUILT'
-            // throw new hudson.AbortException("Build skipped due to SCM skip pattern")
+            throw new hudson.AbortException("Build skipped due to SCM skip pattern")
         }
     } else {
-        echo "Proceeding with the build."
+        echo "Proceeding with the build"
     }
 }
 
