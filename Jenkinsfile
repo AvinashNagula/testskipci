@@ -27,7 +27,7 @@ pipeline {
             }
             steps {
                 // Add your build steps here
-                echo 'Building...'
+                echo 'Building....'
             }
         }
         stage('Test') {
