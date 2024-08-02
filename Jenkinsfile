@@ -51,10 +51,6 @@ def scmSkipCI(Map params = [:]) {
     def commitMessage = getCommitMessage()
     if (commitMessage ==~ /${skipPattern}/) {
         echo "Skipping build due to commit message matching pattern ${skipPattern}"
-        if (deleteBuild) {
-            currentBuild.result = 'NOT_BUILT'
-            throw new hudson.AbortException("Build skipped due to SCM skip pattern")
-        }
     } else {
         echo "Proceeding with the build"
     }
