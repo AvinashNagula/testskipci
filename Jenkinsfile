@@ -15,7 +15,7 @@ pipeline {
                 not {
                     expression {
                         def pattern = ~/.*\[ci skip\].*/
-                        return scmSkip(currentBuild.rawBuild, pattern, currentBuild.rawBuild.getListener())
+                        return scmSkip(run: currentBuild.rawBuild, pattern: pattern, listener: currentBuild.rawBuild.getListener())
                     }
                 }
             }
@@ -45,7 +45,6 @@ pipeline {
         }
     }
 }
-
 import hudson.model.Run
 import hudson.model.TaskListener
 import hudson.scm.ChangeLogSet
@@ -57,7 +56,10 @@ import java.util.regex.Pattern
 def LOGGER = Logger.getLogger(this.class.name)
 
 // Function to check if the build should be skipped based on commit messages
-def call(Run<?, ?> run, Pattern pattern, TaskListener listener) {
+def call(Map params) {
+    def run = params.run
+    def pattern = params.pattern
+    def listener = params.listener
     return shouldSkipBuild(run, pattern, listener)
 }
 
