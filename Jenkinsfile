@@ -73,7 +73,7 @@ def scmSkipCI(Map params = [:]) {
             // throw new hudson.AbortException("Build skipped due to SCM skip pattern")
         }
     } else {
-        echo "Proceeding with the build."
+        echo "Proceeding with the build.."
     }
 }
 
