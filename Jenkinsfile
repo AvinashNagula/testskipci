@@ -49,10 +49,15 @@ pipeline {
         }
     }
 
-    post {
+     post {
         always {
             script {
-                echo "Build skipped due to commit message matching skip pattern."
+                def commitMessage = sh(script: 'git log -1 --pretty=%B', returnStdout: true).trim()
+                if (commitMessage ==~ /.*\[ci skip\].*/) {
+                    echo "Skipping the entire pipeline due to commit message matching pattern."
+                    currentBuild.result = 'ABORTED' // Set the build result to ABORTED
+                    deleteBuild() // Custom method to delete the build
+                }
             }
         }
     }
@@ -78,4 +83,11 @@ def getCommitMessage() {
     // This assumes the use of the Git plugin
     def commitMessage = sh(script: 'git log -1 --pretty=%B', returnStdout: true).trim()
     return commitMessage
+}
+
+def deleteBuild() {
+    if (currentBuild.result == 'ABORTED') {
+        echo "Deleting the build marked as ABORTED"
+        currentBuild.rawBuild.delete()
+    }
 }
