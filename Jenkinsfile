@@ -13,7 +13,8 @@ pipeline {
         stage('Checkout') {
             
             steps {
-                scmSkip(deleteBuild: true, skipPattern:'.*\\[ci skip\\].*')
+                // scmSkip(deleteBuild: true, skipPattern:'.*\\[ci skip\\].*')
+                scmSkipCI(deleteBuild: true, skipPattern: '.*\\[ci skip\\].*')
                 // Checkout code from a Git repository
                 git url: 'https://github.com/AvinashNagula/testskipci.git', branch: 'main'
                     
