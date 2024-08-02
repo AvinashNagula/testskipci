@@ -53,7 +53,7 @@ pipeline {
         always {
             script {
                 if (currentBuild.result == 'NOT_BUILT') {
-                    echo 'Deleting build marked as NOT_BUILT'
+                    echo 'Deleting build marke.d as NOT_BUILT'
                     currentBuild.rawBuild.delete()
                 }
             }
