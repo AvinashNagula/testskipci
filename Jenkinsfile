@@ -53,7 +53,7 @@ pipeline {
         always {
             script {
                 if (currentBuild.result == 'NOT_BUILT') {
-                    echo 'Deleting build marke.d as NOT_BUILT'
+                    echo 'Deleting build marked as NOT_BUILT'
                     currentBuild.rawBuild.delete()
                 }
             }
@@ -73,7 +73,7 @@ def scmSkipCI(Map params = [:]) {
             // throw new hudson.AbortException("Build skipped due to SCM skip pattern")
         }
     } else {
-        echo "Proceeding with the build.."
+        echo "Proceeding with the build."
     }
 }
 
