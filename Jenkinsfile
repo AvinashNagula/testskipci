@@ -13,34 +13,29 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
-                
                     // Checkout code from a Git repository
                     git url: 'https://github.com/AvinashNagula/testskipci.git', branch: 'main'
-                    scmSkipCI(deleteBuild: false, skipPattern: '.*ci skip.*')
-                    def commitMessage = sh(script: 'git log -1 --pretty=%B', returnStdout: true).trim()
-                    if (commitMessage ==~ /.*\[ci skip\].*/) {
-                        echo "Skipping the entire pipeline due to commit message matching pattern."
-                        currentBuild.result = 'ABORTED' // Set the build result to ABORTED
-                        error("Aborting the pipeline due to 'ci skip' in the commit message.")
-                    }
+
+                    // Call the SCM Skip CI function
+                    scmSkipCI(deleteBuild: true, skipPattern: '.*\\[ci skip\\].*')
                 }
             }
         }
         stage('Build') {
             when {
                 not {
-                    equals expected: 'NOT_BUILT', actual: currentBuild.result
+                    expression { currentBuild.result == 'NOT_BUILT' }
                 }
             }
             steps {
                 // Add your build steps here
-                echo 'Building....'
+                echo 'Building...'
             }
         }
         stage('Test') {
             when {
                 not {
-                    equals expected: 'NOT_BUILT', actual: currentBuild.result
+                    expression { currentBuild.result == 'NOT_BUILT' }
                 }
             }
             steps {
@@ -62,6 +57,7 @@ pipeline {
     }
 }
 
+// Function to check if the build should be skipped based on the commit message
 def scmSkipCI(Map params = [:]) {
     def deleteBuild = params.get('deleteBuild', false)
     def skipPattern = params.get('skipPattern', '.*\\[ci skip\\].*')
@@ -78,12 +74,14 @@ def scmSkipCI(Map params = [:]) {
     }
 }
 
+// Function to get the commit message
 def getCommitMessage() {
     // This assumes the use of the Git plugin
     def commitMessage = sh(script: 'git log -1 --pretty=%B', returnStdout: true).trim()
     return commitMessage
 }
 
+// Function to delete the build
 def deleteBuild() {
     echo "Deleting the build marked as ABORTED."
     currentBuild.rawBuild.delete()
