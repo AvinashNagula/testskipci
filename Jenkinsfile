@@ -2,7 +2,9 @@ pipeline {
     agent any
 
     options {
-        skipDefaultCheckout true
+        skipStagesAfterUnstable()
+        skipDefaultCheckout()
+        skipCI()
     }
 
     triggers {
@@ -15,7 +17,8 @@ pipeline {
                 // Checkout code from a Git repository
                 git url: 'https://github.com/AvinashNagula/testskipci.git', branch: 'main'
                 // Call the scmSkipCI function after checkout
-                scmSkipCI(deleteBuild: true)
+                scmSkip(deleteBuild: true, skipPattern: '.*\\[ci skip\\].*')
+
             }
         }
         stage('Build') {
