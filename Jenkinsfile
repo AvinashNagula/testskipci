@@ -28,7 +28,7 @@ pipeline {
             }
             steps {
                 // Add your build steps here
-                echo 'Building....'
+                echo 'Building...'
             }
         }
         stage('Test') {
@@ -66,9 +66,9 @@ def scmSkipCI(Map params = [:]) {
             currentBuild.result = 'NOT_BUILT'
             throw new hudson.AbortException("Build skipped due to SCM skip pattern")
             if (currentBuild.result == 'NOT_BUILT') {
-                    echo 'Deleting build marked as NOT_BUILT'
-                    currentBuild.rawBuild.delete()
-                }
+                echo 'Deleting build marked as NOT_BUILT'
+                currentBuild.rawBuild.delete()
+            }
         }
     } else {
         echo "Proceeding with the build"
