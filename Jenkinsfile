@@ -49,21 +49,19 @@ def scmSkipCI(Map params = [:]) {
     // Define skip patterns
     def skipPatterns = ['.*\\[ci skip\\].*', '.*ci skip.*']
 
+    // Get the latest commit message
     def commitMessage = getCommitMessage()
+    echo "Latest commit message: ${commitMessage}"
+
+    // Check if the commit message matches any of the skip patterns
     for (pattern in skipPatterns) {
         if (commitMessage ==~ /${pattern}/) {
-            echo "Skipping build due to commit message matching pattern ${pattern}"
+            echo "Skipping build due to commit message matching pattern: ${pattern}"
             if (deleteBuild) {
-                currentBuild.result = 'NOT_BUILT'
-                error("Build skipped due to SCM skip pattern")
+                currentBuild.rawBuild.delete()  // Permanently delete the build
+                error("Build skipped and deleted due to SCM skip pattern") // Optional error message
             }
         }
     }
     echo "Proceeding with the build"
-}
-
-def getCommitMessage() {
-    // This assumes the use of the Git plugin
-    def commitMessage = sh(script: 'git log -1 --pretty=%B', returnStdout: true).trim()
-    return commitMessage
 }
